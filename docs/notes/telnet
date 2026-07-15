@@ -1,0 +1,52 @@
+# Telnet Notes
+
+## What is Telnet?
+
+* Telnet is a **client program** that opens a **TCP connection** to a specified host and port.
+* By itself, it **does not speak HTTP, SSH, SMTP, or any other application protocol**.
+* It simply lets you send and receive raw bytes over a TCP connection.
+
+## Why is Telnet useful?
+
+It allows us to manually communicate with servers and understand how protocols work under the hood.
+
+Example:
+
+```bash
+telnet google.com 80
+```
+
+This connects to **port 80** on Google's server.
+
+## Why does `telnet google.com 80` work?
+
+Because **port 80 is running an HTTP server**.
+
+After connecting, if we manually type a valid HTTP request:
+
+```http
+GET / HTTP/1.1
+Host: google.com
+
+```
+
+the HTTP server understands it and sends back an HTTP response.
+
+## Why doesn't SSH work on port 80?
+
+Running:
+
+```bash
+ssh google.com -p 80
+```
+
+does not work because the SSH client immediately starts speaking the **SSH protocol**, while Google's server on port 80 expects **HTTP**.
+
+The protocols don't match, so the connection is rejected.
+
+## Key Takeaways
+
+* **Telnet opens a TCP connection.**
+* **The server decides which protocol it expects based on the program listening on that port.**
+* **After connecting, we must speak the protocol that the server understands.**
+* Ports identify **which program** receives the connection; the **program defines the protocol**.
