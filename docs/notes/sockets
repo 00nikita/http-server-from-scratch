@@ -1,0 +1,93 @@
+# Sockets (My Understanding)
+
+## Why do we even need sockets?
+
+Initially I thought:
+
+> If we already know the IP and port, why can't the program just listen on that port?
+
+The problem is that **a port is just an address**.
+
+It cannot remember:
+
+* who's connected
+* data waiting to be read
+* data waiting to be sent
+* whether the connection is still alive
+* TCP state
+
+The OS needs an object to store everything related to one conversation.
+
+That object is the **socket**.
+
+---
+
+## My Mental Model
+
+Port = "Where should incoming connections arrive?"
+
+Socket = "The actual conversation happening with one client."
+
+---
+
+## Listening Socket
+
+The server creates one listening socket.
+
+Its only job is:
+
+> Wait for new clients.
+
+It never talks to clients directly.
+
+---
+
+## Connected Socket
+
+Whenever a client connects,
+
+the OS creates a **new socket** for that client.
+
+Now all communication (`recv`, `send`) happens through this socket.
+
+The listening socket keeps waiting for more clients.
+
+---
+
+## One Port, Many Clients
+
+```text
+Port 8080
+
+↓
+
+Listening Socket
+
+↓
+
+Client Socket A
+
+Client Socket B
+
+Client Socket C
+```
+
+One port.
+
+One listening socket.
+
+Many connected sockets.
+
+---
+
+## Important Realization
+
+The socket is **not there because there are multiple clients**.
+
+Even if there was only **one client in the world**, the OS still needs somewhere to store everything about that TCP connection.
+
+---
+
+## One line I'll remember
+
+> **Port tells the OS WHERE the client came. Socket stores EVERYTHING about the conversation.**
