@@ -1,24 +1,22 @@
 import socket
 
-Server_host = 0.0.0.0
-Server_port = 8080
+host = "0.0.0.0"
+port = 8000
 
 #creating socket
-
-server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-server_socket.bind((Server_host, Server_port))
-server_socket.listen(1)
-print('Listening on port %s ...' % Server_port)
-
-
-
+socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 #binding socket
+socket.bind((host, port))
+#listen to connections 
+socket.listen()
+#acccept connection
+while True:
+    #listening socket opens a client socket when a request is received
+    client_connection, client_address = socket.accept()
+    client_request = client_connection.recv(1024).decode() # it comes in bytes, after which it is decoded and it turns to http format, which client browser sends accoriding to protocol.
+    print(client_request)
+    response = client_connection.sendall(response.encode())
+    client_connection.close()
 
-
-
-#listening socket 
-
-
-
-#replying socket
+#close listening socket
+socket.close()
