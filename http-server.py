@@ -27,7 +27,17 @@ while True:
         key, value = line.split(":", 1)
         headers[key]=value.strip()
     print("Headers:", headers) 
-    response = 'HTTP/1.0 200 OK\n\nHello World\n'
+    if path == "/":
+        body = "Home Page"
+        status = "HTTP/1.1 200 OK"
+    elif path == "/about":
+        body = "About Page"
+        status = "HTTP/1.1 200 OK"
+    else:
+        body = "404: PAGE NOT FOUND"
+        status = "HTTP/1.1 404 NOT FOUND"
+
+    response = f"{status}\r\nContent-Length: {len(body)}\r\n\r\n{body}"
     client_connection.sendall(response.encode())
     # client_connection.close()
 
