@@ -19,6 +19,12 @@ while True:
     print("method:", method)    
     print("path:", path)
     print("version:", version)
+    query = path.split("?")[1]
+    query_param = {}
+    for pair in query.split("&"):
+        key, value = pair.split("=")
+        query_param[key] = value
+    print("query param:", query_param)
     lines = client_request.splitlines()
     headers = {}
     for line in lines[1:]:
