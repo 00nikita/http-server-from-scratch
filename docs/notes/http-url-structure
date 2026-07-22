@@ -1,0 +1,8 @@
+STRUCTURE:
+
+METHOD /Path?key=value&key&value&key=value
+
+EG : GET /search?q=python&page=2&sort=price
+
+     path = /search
+     query parameters: q=python&page=2&sort=price
