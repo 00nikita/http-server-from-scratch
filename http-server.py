@@ -1,5 +1,5 @@
 import socket
-import parser_request from parser
+from parser import parse_request
 
 host = "0.0.0.0"
 port = 8000
@@ -17,7 +17,7 @@ while True:
     client_request = client_connection.recv(1024).decode() # it comes in bytes, after which it is decoded and it turns to http format, which client browser sends accoriding to protocol.
     request_line = client_request.splitlines()[0]
     method, path, version = request_line.split()
-    method, path, version, query_param, headers =parser_request(client_request)
+    method, path, version, query_param, headers =parse_request(client_request)
     print("method:", method)    
     print("path:", path)
     print("version:", version)

@@ -1,5 +1,5 @@
 def parse_request(request):
-    request_line = client_request.splitlines()[0]
+    request_line = request.splitlines()[0]
     method, path, version = request_line.split()
     query_param = {}
     if "?" in path:
@@ -7,7 +7,7 @@ def parse_request(request):
         for pair in query.split("&"):
             key, value = pair.split("=")
             query_param[key] = value
-    request_lines = client_request.splitlines()
+    request_lines = crequest.splitlines()
     headers = {}
     for line in request_lines[1:]:
         if line=="":
