@@ -15,8 +15,6 @@ while True:
     client_connection, client_address = socket.accept()
     #listening socket opens a client socket when a request is received
     client_request = client_connection.recv(1024).decode() # it comes in bytes, after which it is decoded and it turns to http format, which client browser sends accoriding to protocol.
-    request_line = client_request.splitlines()[0]
-    method, path, version = request_line.split()
     method, path, version, query_param, headers, body = parse_request(client_request)
     print("method:", method)
     print("path:", path)
