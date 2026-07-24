@@ -17,12 +17,13 @@ while True:
     client_request = client_connection.recv(1024).decode() # it comes in bytes, after which it is decoded and it turns to http format, which client browser sends accoriding to protocol.
     request_line = client_request.splitlines()[0]
     method, path, version = request_line.split()
-    method, path, version, query_param, headers =parse_request(client_request)
-    print("method:", method)    
+    method, path, version, query_param, headers, body = parse_request(client_request)
+    print("method:", method)
     print("path:", path)
     print("version:", version)
     print("query param:", query_param)
     print("Headers:", headers)
+    print("Body:", body)
     if path == "/":
         body = "Home Page"
         status = "HTTP/1.1 200 OK"

@@ -1,4 +1,4 @@
-STRUCTURE:
+STRUCTURE: ( Visible Part )
 
 METHOD /Path?key=value&key&value&key=value
 
@@ -6,3 +6,30 @@ EG : GET /search?q=python&page=2&sort=price
 
      path = /search
      query parameters: q=python&page=2&sort=price
+
+
+HTTP REQUEST : ( visible + invisible )
+
+HTTP Request
+│
+├── Request Line
+│     ├── Method (GET, POST, PUT, DELETE...)
+│     ├── Path (/users)
+│     └── Query Parameters (?page=2)
+│
+├── Headers
+│     ├── Metadata
+│     ├── Content-Type
+│     ├── Content-Length
+│     └── Authorization
+│
+├── Blank Line
+│
+└── Body (Payload)
+      ├── Login credentials
+      ├── Signup form
+      ├── JSON
+      ├── Images
+      ├── PDFs
+      ├── Videos
+      └── Any data the client wants to send
