@@ -1,5 +1,6 @@
 import socket
 from parser import parse_request
+from handlers import home, about, login_page, process_login, not_found
 
 host = "0.0.0.0"
 port = 8000
@@ -23,15 +24,16 @@ while True:
     print("query param:", query_param)
     print("Headers:", headers)
     print("Body:", body)
-    if path == "/":
-        body = "Home Page"
-        status = "HTTP/1.1 200 OK"
-    elif path == "/about":
-        body = "About Page"
-        status = "HTTP/1.1 200 OK"
+    if method=="GET" and path == "/":
+        status, body = home()
+    elif method=="GET" and path == "/about":
+        status, body = about()
+    elif method=="GET" and path == "/login":
+        status, body = login_page()
+    elif method=="POST" and path == "/login":
+        status, body = process_login(headers, body)
     else:
-        body = "404: PAGE NOT FOUND"
-        status = "HTTP/1.1 404 NOT FOUND"
+        status, body = not_found()
 
     response = f"{status}\r\nContent-Length: {len(body)}\r\n\r\n{body}"
     client_connection.sendall(response.encode())
