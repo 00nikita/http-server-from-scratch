@@ -1,6 +1,6 @@
 import socket
 from parser import parse_request
-from handlers import home, about, login_page, process_login, not_found
+from handlers import home, about, login_page, process_login, not_found, serve_static_file
 from response import response_builder
 
 host = "0.0.0.0"
@@ -27,6 +27,10 @@ while True:
     print("Headers:", headers)
     print("Body:", body)
 
+    response_headers = {
+        "Content-Type": "text/html"
+    }
+
     #route the requests to the appropriate handler
     if method=="GET" and path == "/":
         status, body = home()
@@ -36,12 +40,12 @@ while True:
         status, body = login_page()
     elif method=="POST" and path == "/login":
         status, body = process_login(headers, body)
+    elif path.startswith("/static/"):
+        status, body, content_type = serve_static_file(path)
+        response_headers["Content-Type"] = content_type
     else:
         status, body = not_found()
-
-    response = response_builder(status ,headers, body)
-
-    response = f"{status}\r\nContent-Length: {len(body)}\r\n\r\n{body}"
+    response = response_builder(status, response_headers ,body)
     client_connection.sendall(response.encode())
     # client_connection.close()
 
