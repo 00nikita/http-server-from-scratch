@@ -1,6 +1,7 @@
 import socket
 from parser import parse_request
 from handlers import home, about, login_page, process_login, not_found
+from response import response_builder
 
 host = "0.0.0.0"
 port = 8000
@@ -17,6 +18,7 @@ while True:
     #listening socket opens a client socket when a request is received
     client_request = client_connection.recv(1024).decode()# it comes in bytes, after which it is decoded and it turns to http format, which client browser sends accoriding to protocol.
     print(client_request)
+    #parse the incoming request
     method, path, version, query_param, headers, body = parse_request(client_request)
     print("method:", method)
     print("path:", path)
@@ -24,6 +26,8 @@ while True:
     print("query param:", query_param)
     print("Headers:", headers)
     print("Body:", body)
+
+    #route the requests to the appropriate handler
     if method=="GET" and path == "/":
         status, body = home()
     elif method=="GET" and path == "/about":
@@ -34,6 +38,8 @@ while True:
         status, body = process_login(headers, body)
     else:
         status, body = not_found()
+
+    response = response_builder(status ,headers, body)
 
     response = f"{status}\r\nContent-Length: {len(body)}\r\n\r\n{body}"
     client_connection.sendall(response.encode())
