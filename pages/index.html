@@ -1,27 +1,35 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
+
 <head>
-    <title>Home</title>
-    <link rel="stylesheet" href="/static/style.css">
+    <meta charset="UTF-8">
+    <title>My HTTP Server</title>
+
+    <link rel="stylesheet" href="/static/css/style.css">
 </head>
+
 <body>
 
-    <h1>Welcome to My HTTP Server</h1>
+    <h1>Welcome to My HTTP Server 🚀</h1>
 
-    <p>
-        This website is being served entirely by a custom HTTP server
-        built from scratch using Python sockets.
+    <p>This page is being served from my own HTTP server.</p>
+
+    <img src="/static/images/logo.png"
+         alt="Logo"
+         width="300">
+
+    <br><br>
+
+    <button id="helloBtn">
+        Click Me
+    </button>
+
+    <p id="message">
+        Click the button to see JavaScript in action.
     </p>
 
-    <hr>
-
-    <h2>Navigation</h2>
-
-    <ul>
-        <li><a href="/">Home</a></li>
-        <li><a href="/about">About</a></li>
-        <li><a href="/login">Login</a></li>
-    </ul>
+    <script src="/static/js/app.js"></script>
 
 </body>
+
 </html>
