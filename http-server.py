@@ -46,7 +46,7 @@ while True:
     else:
         status, body = not_found()
     response = response_builder(status, response_headers ,body)
-    client_connection.sendall(response.encode())
+    client_connection.sendall(response)
     # client_connection.close()
 
 #close listening socket
