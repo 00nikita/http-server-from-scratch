@@ -1,8 +1,8 @@
 import socket
 from parser import parse_request
-from handlers import home, about, login_page, process_login, not_found, serve_static_file, welcome
+from handlers import not_found, serve_static_file
 from response import response_builder
-from router import routes
+from router import resolve
 
 host = "0.0.0.0"
 port = 8000
@@ -29,11 +29,9 @@ while True:
     print("Body:", body)
 
     #route the requests to the appropriate handler
-    handler = routes.get((method, path))
+    handler = resolve(method, path)
     if handler:
         status, response_headers, body = handler(path, headers, body)
-    elif method == "GET" and path.startswith("/static/"):
-        status, response_headers, body = serve_static_file(path, headers, body)
     else:
         status, response_headers, body = not_found(path, headers, body)
     response = response_builder(status, response_headers ,body)
