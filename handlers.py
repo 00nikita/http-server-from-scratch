@@ -1,27 +1,51 @@
+from datetime import datetime, timezone
+
+def response_headers_builder(page, headers):
+    now = datetime.now(timezone.utc)
+    date = now.strftime("%a, %d %b %Y %H:%M:%S GMT")
+    response_headers = {
+        "Content-Length": str(len(page)),
+        "Server": "NikhithaHTTP/1.0",
+        "Date": date,
+        "Connection": "close"
+    }
+    response_headers.update(headers)
+    return response_headers
+
 def home():
     with open("pages/index.html", "rb") as f:
         page = f.read()
-    return "HTTP/1.1 200 OK", page
+    response_headers = response_headers_builder(page, {"Content-Type": "text/html"})
+    return "HTTP/1.1 200 OK", response_headers, page
+
 def about():
     with open("pages/about.html", "rb") as f:
         page = f.read()
-    return "HTTP/1.1 200 OK", page
+    response_headers = response_headers_builder(page, {"Content-Type": "text/html"})
+    return "HTTP/1.1 200 OK", response_headers, page
+
 def login_page():
     with open("pages/login.html", "rb") as f:
         page = f.read()
-    return "HTTP/1.1 200 OK", page
-def process_login(headers, body):
-    with open("pages/login_success.html", "rb") as f:
+    response_headers = response_headers_builder(page, {"Content-Type": "text/html"})
+    return "HTTP/1.1 200 OK", response_headers, page
+
+def welcome():
+    with open("pages/welcome.html", "rb") as f:
         page = f.read()
-    username = body["username"]
-    body = body.encode()  # Encode the body to bytes
-    page = page.replace("{{username}}", username)
-    body = body.decode()
-    return "HTTP/1.1 200 OK", page
+    response_headers = response_headers_builder(page, {"Content-Type": "text/html"})
+    return "HTTP/1.1 200 OK", response_headers, page
+
+def process_login(headers, body):
+    response_headers = response_headers_builder(b"", {"Location": "/welcome"})
+    return "HTTP/1.1 302 Found", response_headers, b""
+
 def not_found():
     with open("pages/not_found.html", "rb") as f:
         page = f.read()
-    return "HTTP/1.1 404 Not Found", page
+    response_headers = response_headers_builder(page, {"Content-Type": "text/html"})
+    return "HTTP/1.1 404 Not Found", response_headers, page
+
 def serve_static_file(path):
     file_path = path.split("/", 1)[1]
     if file_path.endswith(".css"):
@@ -33,5 +57,6 @@ def serve_static_file(path):
     else:
         content_type = "application/octet-stream"
     with open(file_path, "rb") as f:
-        content = f.read()
-    return "HTTP/1.1 200 OK", content, content_type
+        page = f.read()
+    response_headers = response_headers_builder(page, {"Content-Type": content_type})
+    return "HTTP/1.1 200 OK", response_headers, page
