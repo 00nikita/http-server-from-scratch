@@ -20,7 +20,13 @@ while True:
     client_request = client_connection.recv(1024).decode()# it comes in bytes, after which it is decoded and it turns to http format, which client browser sends accoriding to protocol.
     print(client_request)
     #parse the incoming request
-    method, path, version, query_param, headers, body = parse_request(client_request)
+    try:
+        method, path, version, query_param, headers, body = parse_request(client_request)
+    except Exception as e:
+        response = bad_request("", {}, "")
+        client_connection.sendall(response.encode())
+        continue
+
     print("method:", method)
     print("path:", path)
     print("version:", version)

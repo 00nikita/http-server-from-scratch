@@ -46,6 +46,12 @@ def not_found(path, headers, body):
     response_headers = response_headers_builder(page, {"Content-Type": "text/html"})
     return "HTTP/1.1 404 Not Found", response_headers, page
 
+def bad_request(path, headers, body):
+    with open("pages/bad_request.html", "rb") as f:
+        page = f.read()
+    response_headers = response_headers_builder(page, {"Content-Type": "text/html"})
+    return "HTTP/1.1 400 Bad Request", response_headers, page
+
 def serve_static_file(path, headers, body):
     file_path = path.split("/", 1)[1]
     if file_path.endswith(".css"):
@@ -56,7 +62,11 @@ def serve_static_file(path, headers, body):
         content_type = "image/png"
     else:
         content_type = "application/octet-stream"
-    with open(file_path, "rb") as f:
-        page = f.read()
+    try:
+        with open(file_path, "rb") as f:
+            page = f.read()
+    except FileNotFoundError:
+        return not_found(path, headers, body)
+
     response_headers = response_headers_builder(page, {"Content-Type": content_type})
     return "HTTP/1.1 200 OK", response_headers, page
