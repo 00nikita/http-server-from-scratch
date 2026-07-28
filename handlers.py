@@ -12,41 +12,41 @@ def response_headers_builder(page, headers):
     response_headers.update(headers)
     return response_headers
 
-def home():
+def home(path, headers, body):
     with open("pages/index.html", "rb") as f:
         page = f.read()
     response_headers = response_headers_builder(page, {"Content-Type": "text/html"})
     return "HTTP/1.1 200 OK", response_headers, page
 
-def about():
+def about(path, headers, body):
     with open("pages/about.html", "rb") as f:
         page = f.read()
     response_headers = response_headers_builder(page, {"Content-Type": "text/html"})
     return "HTTP/1.1 200 OK", response_headers, page
 
-def login_page():
+def login_page(path, headers, body):
     with open("pages/login.html", "rb") as f:
         page = f.read()
     response_headers = response_headers_builder(page, {"Content-Type": "text/html"})
     return "HTTP/1.1 200 OK", response_headers, page
 
-def welcome():
+def welcome(path, headers, body):
     with open("pages/welcome.html", "rb") as f:
         page = f.read()
     response_headers = response_headers_builder(page, {"Content-Type": "text/html"})
     return "HTTP/1.1 200 OK", response_headers, page
 
-def process_login(headers, body):
+def process_login(path, headers, body):
     response_headers = response_headers_builder(b"", {"Location": "/welcome"})
     return "HTTP/1.1 302 Found", response_headers, b""
 
-def not_found():
+def not_found(path, headers, body):
     with open("pages/not_found.html", "rb") as f:
         page = f.read()
     response_headers = response_headers_builder(page, {"Content-Type": "text/html"})
     return "HTTP/1.1 404 Not Found", response_headers, page
 
-def serve_static_file(path):
+def serve_static_file(path, headers, body):
     file_path = path.split("/", 1)[1]
     if file_path.endswith(".css"):
         content_type = "text/css"
