@@ -1,6 +1,6 @@
 import socket
 from parser import parse_request
-from handlers import not_found, serve_static_file, bad_request, internal_server_error
+from handlers import not_found, serve_static_file, bad_request, internal_server_error, method_not_allowed
 from response import response_builder
 from router import resolve
 
@@ -24,7 +24,7 @@ while True:
     except Exception as e:
         status, response_headers, body = bad_request("", {}, "")
         response = response_builder(status, response_headers ,body)
-        client_connection.sendall(response.encode())
+        client_connection.sendall(response)
         client_connection.close()
         continue
 
@@ -37,9 +37,17 @@ while True:
 
     #route the requests to the appropriate handler
     try:
-        handler = resolve(method, path)
+        handler, route = resolve(method, path)
         if handler:
             status, response_headers, body = handler(path, headers, body)
+        elif route:
+            allowed_methods = ", ".join(route.keys())
+            status, response_headers, body = method_not_allowed(
+            path,
+            headers,
+            body,
+            allowed_methods
+        )
         else:
             status, response_headers, body = not_found(path, headers, body)
     except Exception as e:

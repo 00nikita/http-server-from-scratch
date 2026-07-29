@@ -58,6 +58,12 @@ def internal_server_error(path, headers, body):
     response_headers = response_headers_builder(page, {"Content-Type": "text/html"})
     return "HTTP/1.1 500 Internal Server Error", response_headers, page
 
+def method_not_allowed(path, headers, body, allowed_methods):
+    with open("pages/method_not_allowed.html", "rb") as f:
+        page = f.read()
+    response_headers = response_headers_builder(page, {"Content-Type": "text/html", "Allow": allowed_methods})
+    return "HTTP/1.1 405 Method Not Allowed", response_headers, page
+
 def serve_static_file(path, headers, body):
     file_path = path.split("/", 1)[1]
     if file_path.endswith(".css"):

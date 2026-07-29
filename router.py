@@ -7,14 +7,33 @@ from handlers import (
     serve_static_file
 )
 routes = {
-    ("GET", "/"): home,
-    ("GET", "/about"): about,
-    ("GET", "/login"): login_page,
-    ("POST", "/login"): process_login,
-    ("GET", "/welcome"): welcome
+    "/": 
+    {
+        "GET": home
+    },
+    "/about":
+    {
+        "GET": about
+    },
+    "/login":
+    {
+        "GET": login_page,
+        "POST": process_login
+    },
+    "/welcome":
+    {
+        "GET": welcome
+    }
 }
 
 def resolve(method, path):
     if method == "GET" and path.startswith("/static/"):
         return serve_static_file
-    return routes.get((method, path))
+    route = routes.get(path)
+    if route:
+        handler = route.get(method)
+        if handler:
+            return handler, route
+        return None, route
+
+    return None, None
