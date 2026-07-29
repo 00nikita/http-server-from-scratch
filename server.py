@@ -1,6 +1,6 @@
 import socket
 from parser import parse_request
-from handlers import not_found, serve_static_file
+from handlers import not_found, serve_static_file, bad_request, internal_server_error
 from response import response_builder
 from router import resolve
 
@@ -18,13 +18,14 @@ while True:
     client_connection, client_address = socket.accept()
     #listening socket opens a client socket when a request is received
     client_request = client_connection.recv(1024).decode()# it comes in bytes, after which it is decoded and it turns to http format, which client browser sends accoriding to protocol.
-    print(client_request)
     #parse the incoming request
     try:
         method, path, version, query_param, headers, body = parse_request(client_request)
     except Exception as e:
-        response = bad_request("", {}, "")
+        status, response_headers, body = bad_request("", {}, "")
+        response = response_builder(status, response_headers ,body)
         client_connection.sendall(response.encode())
+        client_connection.close()
         continue
 
     print("method:", method)
@@ -35,14 +36,18 @@ while True:
     print("Body:", body)
 
     #route the requests to the appropriate handler
-    handler = resolve(method, path)
-    if handler:
-        status, response_headers, body = handler(path, headers, body)
-    else:
-        status, response_headers, body = not_found(path, headers, body)
+    try:
+        handler = resolve(method, path)
+        if handler:
+            status, response_headers, body = handler(path, headers, body)
+        else:
+            status, response_headers, body = not_found(path, headers, body)
+    except Exception as e:
+        print("Internal Server Error:", e)
+        status, response_headers, body = internal_server_error(path, headers, body)
     response = response_builder(status, response_headers ,body)
     client_connection.sendall(response)
-    # client_connection.close()
+    client_connection.close()
 
 #close listening socket
 socket.close()

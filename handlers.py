@@ -52,6 +52,12 @@ def bad_request(path, headers, body):
     response_headers = response_headers_builder(page, {"Content-Type": "text/html"})
     return "HTTP/1.1 400 Bad Request", response_headers, page
 
+def internal_server_error(path, headers, body):
+    with open("pages/internal_server_error.html", "rb") as f:
+        page = f.read()
+    response_headers = response_headers_builder(page, {"Content-Type": "text/html"})
+    return "HTTP/1.1 500 Internal Server Error", response_headers, page
+
 def serve_static_file(path, headers, body):
     file_path = path.split("/", 1)[1]
     if file_path.endswith(".css"):
