@@ -1,0 +1,9 @@
+GET – Retrieve a resource.
+POST – Send data to the server.
+HEAD – Same as GET, but returns only headers (no body).
+OPTIONS – Returns the HTTP methods supported by a resource.
+PUT – Replace an entire resource.
+PATCH – Partially update a resource.
+DELETE – Delete a resource.
+TRACE – Echo the request back (used for debugging).
+CONNECT – Establish a tunnel through a proxy (used for HTTPS).

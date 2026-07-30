@@ -1,0 +1,6 @@
+200 OK – Request processed successfully.
+302 Found – Temporary redirect to another URL.
+400 Bad Request – Invalid or malformed HTTP request.
+404 Not Found – Requested resource/path doesn't exist.
+405 Method Not Allowed – Resource exists, but the HTTP method isn't allowed.
+500 Internal Server Error – Unexpected server-side error while processing the request.

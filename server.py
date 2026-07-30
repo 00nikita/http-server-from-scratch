@@ -38,7 +38,17 @@ while True:
     #route the requests to the appropriate handler
     try:
         handler, route = resolve(method, path)
-        if handler:
+        if method == "OPTIONS":
+           if route:
+              status = "HTTP/1.1 200 OK"
+              response_headers = {
+                  "Allow": ", ".join(route.keys())
+              }
+              body = b""
+           else:
+               status, response_headers, body = not_found(path, headers, body)
+
+        elif handler:
             status, response_headers, body = handler(path, headers, body)
         elif route:
             allowed_methods = ", ".join(route.keys())
@@ -55,6 +65,9 @@ while True:
         status, response_headers, body = internal_server_error(path, headers, body)
     if method == "HEAD":
         body = b""
+    if method == "OPTIONS":
+        body = b""
+        response_headers = {"Allow": ", ".join(route.keys())}
     response = response_builder(status, response_headers ,body)
     client_connection.sendall(response)
     client_connection.close()

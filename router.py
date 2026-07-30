@@ -4,34 +4,34 @@ from handlers import (
     login_page,
     process_login,
     welcome,
-    serve_static_file
+    serve_static_file,
 )
 routes = {
     "/": 
     {
-        "GET": home
-        "HEAD": home
+        "GET": home,
+        "HEAD": home,
     },
     "/about":
     {
         "GET": about,
-        "HEAD": about
+        "HEAD": about,
     },
     "/login":
     {
         "GET": login_page,
         "POST": process_login,
-        "HEAD": login_page
+        "HEAD": login_page,
     },
     "/welcome":
     {
         "GET": welcome,
-        "HEAD": welcome
+        "HEAD": welcome,
     }
 }
 
 def resolve(method, path):
-    if method == "GET" and path.startswith("/static/"):
+    if method in ("GET", "HEAD") and path.startswith("/static/"):
         return serve_static_file
     route = routes.get(path)
     if route:
