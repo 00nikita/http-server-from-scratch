@@ -53,6 +53,8 @@ while True:
     except Exception as e:
         print("Internal Server Error:", e)
         status, response_headers, body = internal_server_error(path, headers, body)
+    if method == "HEAD":
+        body = b""
     response = response_builder(status, response_headers ,body)
     client_connection.sendall(response)
     client_connection.close()

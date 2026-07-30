@@ -10,19 +10,23 @@ routes = {
     "/": 
     {
         "GET": home
+        "HEAD": home
     },
     "/about":
     {
-        "GET": about
+        "GET": about,
+        "HEAD": about
     },
     "/login":
     {
         "GET": login_page,
-        "POST": process_login
+        "POST": process_login,
+        "HEAD": login_page
     },
     "/welcome":
     {
-        "GET": welcome
+        "GET": welcome,
+        "HEAD": welcome
     }
 }
 
