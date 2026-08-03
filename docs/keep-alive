@@ -1,0 +1,4 @@
+Keep-Alive allows multiple HTTP requests and responses to be exchanged over a single TCP connection.
+Without Keep-Alive, a new TCP connection is created for every HTTP request.
+It reduces the overhead of repeatedly performing the TCP three-way handshake.
+Improves performance by reusing an already established TCP connection.
