@@ -14,10 +14,29 @@ socket.bind((host, port))
 #listen to connections 
 socket.listen()
 #acccept connection
+keep_alive = False
 while True:
-    client_connection, client_address = socket.accept()
+    if not keep_alive:
+        client_connection, client_address = socket.accept()
+        buffer = b""
     #listening socket opens a client socket when a request is received
-    client_request = client_connection.recv(1024).decode()# it comes in bytes, after which it is decoded and it turns to http format, which client browser sends accoriding to protocol.
+    while b"\r\n\r\n" not in buffer:
+        buffer +=client_connection.recv(1024)
+    client_request = buffer.decode()# it comes in bytes, after which it is decoded and it turns to http format, which client browser sends accoriding to protocol.
+    
+    header_part, body_part = client_request.split("\r\n\r\n", 1)
+
+    content_length = 0
+    for line in header_part.split("\r\n"):
+        if line.startswith("Content-Length:"):
+            content_length = int(line.split(":")[1].strip())
+            break
+    while len(body_part.encode()) < content_length:
+        buffer += client_connection.recv(1024)
+
+        client_request = buffer.decode()
+        header_part, body_part = client_request.split("\r\n\r\n", 1)
+
     #parse the incoming request
     try:
         method, path, version, query_param, headers, body = parse_request(client_request)
@@ -70,7 +89,11 @@ while True:
         response_headers = {"Allow": ", ".join(route.keys())}
     response = response_builder(status, response_headers ,body)
     client_connection.sendall(response)
-    client_connection.close()
+    if headers.get("Connection")=="keep-alive":
+        keep_alive = True
+    else:
+        keep_alive = False
+        client_connection.close()
 
 #close listening socket
 socket.close()
