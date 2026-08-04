@@ -18,12 +18,23 @@ keep_alive = False
 while True:
     if not keep_alive:
         client_connection, client_address = socket.accept()
+        client_connection.settimeout(5.0)
         buffer = b""
     #listening socket opens a client socket when a request is received
     while b"\r\n\r\n" not in buffer:
-        buffer +=client_connection.recv(1024)
+        try:
+            buffer += client_connection.recv(1024)
+        except socket.timeout:
+            print("Connection timed out")
+            client_connection.close()
+            keep_alive = False
     client_request = buffer# it comes in bytes, after which it is decoded and it turns to http format, which client browser sends accoriding to protocol.
-    
+
+    if client_request==b"":
+        client_connection.close()
+        keep_alive = False
+        continue
+
     header_part, remaining_part = client_request.split(b"\r\n\r\n", 1)
 
     content_length = 0
@@ -33,7 +44,13 @@ while True:
             break
     if len(remaining_part) < content_length:
         while len(remaining_part) < content_length:
-            remaining_part += client_connection.recv(1024)
+            try:
+                remaining_part += client_connection.recv(1024)
+            except socket.timeout:
+                print("Connection timed out")
+                client_connection.close()
+                keep_alive = False
+                break
     body_part = remaining_part[:content_length]
     buffer = remaining_part[content_length:]
 
@@ -84,6 +101,12 @@ while True:
     except Exception as e:
         print("Internal Server Error:", e)
         status, response_headers, body = internal_server_error(path, headers, body)
+        response = response_builder(status, response_headers ,body)
+        client_connection.sendall(response)
+        client_connection.close()
+        keep_alive = False
+        continue
+
     if method == "HEAD":
         body = b""
     if method == "OPTIONS":
