@@ -22,30 +22,26 @@ while True:
     #listening socket opens a client socket when a request is received
     while b"\r\n\r\n" not in buffer:
         buffer +=client_connection.recv(1024)
-    client_request = buffer.decode()# it comes in bytes, after which it is decoded and it turns to http format, which client browser sends accoriding to protocol.
+    client_request = buffer# it comes in bytes, after which it is decoded and it turns to http format, which client browser sends accoriding to protocol.
     
-    header_part, remaining_part = client_request.split("\r\n\r\n", 1)
+    header_part, remaining_part = client_request.split(b"\r\n\r\n", 1)
 
     content_length = 0
-    for line in header_part.split("\r\n"):
-        if line.startswith("Content-Length:"):
-            content_length = int(line.split(":")[1].strip())
+    for line in header_part.split(b"\r\n"):
+        if line.startswith(b"Content-Length:"):
+            content_length = int(line.split(b":")[1].strip())
             break
-    if len(remaining_part.encode()) < content_length:
-        while len(remaining_part.encode()) < content_length:
-            buffer += client_connection.recv(1024)
+    if len(remaining_part) < content_length:
+        while len(remaining_part) < content_length:
+            remaining_part += client_connection.recv(1024)
+    body_part = remaining_part[:content_length]
+    buffer = remaining_part[content_length:]
 
-            client_request = buffer.decode()
-            header_part, remaining_part = client_request.split("\r\n\r\n", 1)
-    else:
-        body_part = remaining_part.encode()[:content_length]
-        buffer = remaining_part.encode()[content_length:]
-
-    client_request = header_part + "\r\n\r\n" + body_part.decode()
+    client_request = header_part + b"\r\n\r\n" + body_part
 
     #parse the incoming request
     try:
-        method, path, version, query_param, headers, body = parse_request(client_request)
+        method, path, version, query_param, headers, body = parse_request(client_request.decode())
     except Exception as e:
         status, response_headers, body = bad_request("", {}, "")
         response = response_builder(status, response_headers ,body)
