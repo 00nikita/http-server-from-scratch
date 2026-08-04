@@ -24,18 +24,22 @@ while True:
         buffer +=client_connection.recv(1024)
     client_request = buffer.decode()# it comes in bytes, after which it is decoded and it turns to http format, which client browser sends accoriding to protocol.
     
-    header_part, body_part = client_request.split("\r\n\r\n", 1)
+    header_part, remaining_part = client_request.split("\r\n\r\n", 1)
 
     content_length = 0
     for line in header_part.split("\r\n"):
         if line.startswith("Content-Length:"):
             content_length = int(line.split(":")[1].strip())
             break
-    while len(body_part.encode()) < content_length:
-        buffer += client_connection.recv(1024)
+    if len(remaining_part.encode()) < content_length:
+        while len(remaining_part.encode()) < content_length:
+            buffer += client_connection.recv(1024)
 
-        client_request = buffer.decode()
-        header_part, body_part = client_request.split("\r\n\r\n", 1)
+            client_request = buffer.decode()
+            header_part, remaining_part = client_request.split("\r\n\r\n", 1)
+    else:
+        body_part = remaining_part.encode()[:content_length]
+        remaining_part = remaining_part.encode()[content_length:]
 
     #parse the incoming request
     try:
