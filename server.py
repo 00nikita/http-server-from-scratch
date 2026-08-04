@@ -39,7 +39,9 @@ while True:
             header_part, remaining_part = client_request.split("\r\n\r\n", 1)
     else:
         body_part = remaining_part.encode()[:content_length]
-        remaining_part = remaining_part.encode()[content_length:]
+        buffer = remaining_part.encode()[content_length:]
+
+    client_request = header_part + "\r\n\r\n" + body_part.decode()
 
     #parse the incoming request
     try:
