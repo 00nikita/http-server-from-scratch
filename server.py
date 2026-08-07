@@ -5,6 +5,7 @@ from parser import parse_request
 from handlers import not_found, serve_static_file, bad_request, internal_server_error, method_not_allowed
 from response import response_builder
 from router import resolve
+from logger import log_access, log_error
 
 host = "0.0.0.0"
 port = 8000
@@ -53,6 +54,8 @@ def handle_client(client_connection):
             status, response_headers, body = bad_request("", {}, "")
             response = response_builder(status, response_headers ,body)
             client_connection.sendall(response)
+            client_ip = client_connection.getpeername()[0]
+            log_error(client_ip, method, path, status, e)
             client_connection.close()
             return
 
@@ -93,6 +96,8 @@ def handle_client(client_connection):
             status, response_headers, body = internal_server_error(path, headers, body)
             response = response_builder(status, response_headers ,body)
             client_connection.sendall(response)
+            client_ip = client_connection.getpeername()[0]
+            log_error(client_ip, method, path, status, e)
             client_connection.close()
             continue
 
@@ -103,6 +108,8 @@ def handle_client(client_connection):
             response_headers = {"Allow": ", ".join(route.keys())}
         response = response_builder(status, response_headers ,body)
         client_connection.sendall(response)
+        client_ip = client_connection.getpeername()[0]
+        log_access(client_ip, method, path, status)
         if headers.get("Connection")!="keep-alive":
             client_connection.close()
             return
