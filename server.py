@@ -7,19 +7,7 @@ from router import resolve
 host = "0.0.0.0"
 port = 8000
 
-#creating socket
-socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-#binding socket
-socket.bind((host, port))
-#listen to connections 
-socket.listen()
-#acccept connection
-keep_alive = False
-while True:
-    if not keep_alive:
-        client_connection, client_address = socket.accept()
-        client_connection.settimeout(5.0)
-        buffer = b""
+def handle_client(client_connection, buffer):
     #listening socket opens a client socket when a request is received
     while b"\r\n\r\n" not in buffer:
         try:
@@ -27,13 +15,12 @@ while True:
         except socket.timeout:
             print("Connection timed out")
             client_connection.close()
-            keep_alive = False
+            return None, buffer
     client_request = buffer# it comes in bytes, after which it is decoded and it turns to http format, which client browser sends accoriding to protocol.
 
     if client_request==b"":
         client_connection.close()
-        keep_alive = False
-        continue
+        return None, buffer
 
     header_part, remaining_part = client_request.split(b"\r\n\r\n", 1)
 
@@ -50,11 +37,31 @@ while True:
                 print("Connection timed out")
                 client_connection.close()
                 keep_alive = False
-                break
+                return
     body_part = remaining_part[:content_length]
     buffer = remaining_part[content_length:]
 
     client_request = header_part + b"\r\n\r\n" + body_part
+    return client_request, buffer
+
+
+#creating socket
+socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+#binding socket
+socket.bind((host, port))
+#listen to connections 
+socket.listen()
+#acccept connection
+keep_alive = False
+while True:
+    if not keep_alive:
+        client_connection, client_address = socket.accept()
+        client_connection.settimeout(5.0)
+        buffer = b""
+
+    client_request, buffer = handle_client(client_connection, buffer)
+    if client_request is None:
+        continue
 
     #parse the incoming request
     try:
