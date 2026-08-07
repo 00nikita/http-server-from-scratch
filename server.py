@@ -1,5 +1,6 @@
 import socket
 import threading
+import queue
 from parser import parse_request
 from handlers import not_found, serve_static_file, bad_request, internal_server_error, method_not_allowed
 from response import response_builder
@@ -106,6 +107,12 @@ def handle_client(client_connection):
             client_connection.close()
             return
 
+client_queue = queue.Queue()
+
+def worker():
+    while True:
+        client_connection = client_queue.get()
+        handle_client(client_connection)
 
 #creating socket
 socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -113,14 +120,18 @@ socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 socket.bind((host, port))
 #listen to connections 
 socket.listen()
+
+NUM_WORKERS = 8
+
+for _ in range(NUM_WORKERS):
+    thread = threading.Thread(target=worker)
+    thread.start()
 #acccept connection
 while True:
     client_connection, client_address = socket.accept()
     client_connection.settimeout(5.0)
-    thread = threading.Thread(
-        target=handle_client, args=(client_connection,)
-    )
-    thread.start()
+    client_queue.put(client_connection) #producer model
+
 
 #close listening socket
 socket.close()
