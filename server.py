@@ -1,14 +1,20 @@
 import socket
 import threading
 import queue
+import json
 from parser import parse_request
 from handlers import not_found, serve_static_file, bad_request, internal_server_error, method_not_allowed
 from response import response_builder
 from router import resolve
 from logger import log_access, log_error
 
-host = "0.0.0.0"
-port = 8000
+
+with open("config.json") as f:
+    config = json.load(f)
+
+host = config.get("host")
+port = config.get("port")
+workers = config.get("workers")
 
 def handle_client(client_connection):
     #listening socket opens a client socket when a request is received
@@ -128,9 +134,7 @@ socket.bind((host, port))
 #listen to connections 
 socket.listen()
 
-NUM_WORKERS = 8
-
-for _ in range(NUM_WORKERS):
+for _ in range(workers):
     thread = threading.Thread(target=worker)
     thread.start()
 #acccept connection
