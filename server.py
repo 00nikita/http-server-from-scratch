@@ -7,42 +7,103 @@ from router import resolve
 host = "0.0.0.0"
 port = 8000
 
-def handle_client(client_connection, buffer):
+def handle_client(client_connection):
     #listening socket opens a client socket when a request is received
-    while b"\r\n\r\n" not in buffer:
-        try:
-            buffer += client_connection.recv(1024)
-        except socket.timeout:
-            print("Connection timed out")
-            client_connection.close()
-            return None, buffer
-    client_request = buffer# it comes in bytes, after which it is decoded and it turns to http format, which client browser sends accoriding to protocol.
-
-    if client_request==b"":
-        client_connection.close()
-        return None, buffer
-
-    header_part, remaining_part = client_request.split(b"\r\n\r\n", 1)
-
-    content_length = 0
-    for line in header_part.split(b"\r\n"):
-        if line.startswith(b"Content-Length:"):
-            content_length = int(line.split(b":")[1].strip())
-            break
-    if len(remaining_part) < content_length:
-        while len(remaining_part) < content_length:
+    buffer = b""
+    while True:
+        while b"\r\n\r\n" not in buffer:
             try:
-                remaining_part += client_connection.recv(1024)
+                buffer += client_connection.recv(1024)
             except socket.timeout:
                 print("Connection timed out")
                 client_connection.close()
-                keep_alive = False
                 return
-    body_part = remaining_part[:content_length]
-    buffer = remaining_part[content_length:]
+        client_request = buffer# it comes in bytes, after which it is decoded and it turns to http format, which client browser sends accoriding to protocol.
 
-    client_request = header_part + b"\r\n\r\n" + body_part
-    return client_request, buffer
+        if client_request==b"":
+            client_connection.close()
+            return
+
+        header_part, remaining_part = client_request.split(b"\r\n\r\n", 1)
+
+        content_length = 0
+        for line in header_part.split(b"\r\n"):
+            if line.startswith(b"Content-Length:"):
+                content_length = int(line.split(b":")[1].strip())
+                break
+        if len(remaining_part) < content_length:
+            while len(remaining_part) < content_length:
+                try:
+                    remaining_part += client_connection.recv(1024)
+                except socket.timeout:
+                    print("Connection timed out")
+                    client_connection.close()
+                    return
+        body_part = remaining_part[:content_length]
+        buffer = remaining_part[content_length:]
+
+        client_request = header_part + b"\r\n\r\n" + body_part
+
+        #parse the incoming request
+        try:
+            method, path, version, query_param, headers, body = parse_request(client_request.decode())
+        except Exception as e:
+            status, response_headers, body = bad_request("", {}, "")
+            response = response_builder(status, response_headers ,body)
+            client_connection.sendall(response)
+            client_connection.close()
+            return
+
+        print("method:", method)
+        print("path:", path)
+        print("version:", version)
+        print("query param:", query_param)
+        print("Headers:", headers)
+        print("Body:", body)
+
+        #route the requests to the appropriate handler
+        try:
+            handler, route = resolve(method, path)
+            if method == "OPTIONS":
+                if route:
+                    status = "HTTP/1.1 200 OK"
+                    response_headers = {
+                        "Allow": ", ".join(route.keys())
+                    }
+                    body = b""
+                else:
+                    status, response_headers, body = not_found(path, headers, body)
+
+            elif handler:
+                status, response_headers, body = handler(path, headers, body)
+            elif route:
+                allowed_methods = ", ".join(route.keys())
+                status, response_headers, body = method_not_allowed(
+                path,
+                headers,
+                body,
+                allowed_methods
+            )
+            else:
+                status, response_headers, body = not_found(path, headers, body)
+        except Exception as e:
+            print("Internal Server Error:", e)
+            status, response_headers, body = internal_server_error(path, headers, body)
+            response = response_builder(status, response_headers ,body)
+            client_connection.sendall(response)
+            client_connection.close()
+            continue
+
+        if method == "HEAD":
+            body = b""
+        if method == "OPTIONS":
+            body = b""
+            response_headers = {"Allow": ", ".join(route.keys())}
+        response = response_builder(status, response_headers ,body)
+        client_connection.sendall(response)
+        if headers.get("Connection")!="keep-alive":
+            client_connection.close()
+            return
 
 
 #creating socket
@@ -52,80 +113,10 @@ socket.bind((host, port))
 #listen to connections 
 socket.listen()
 #acccept connection
-keep_alive = False
 while True:
-    if not keep_alive:
-        client_connection, client_address = socket.accept()
-        client_connection.settimeout(5.0)
-        buffer = b""
-
-    client_request, buffer = handle_client(client_connection, buffer)
-    if client_request is None:
-        continue
-
-    #parse the incoming request
-    try:
-        method, path, version, query_param, headers, body = parse_request(client_request.decode())
-    except Exception as e:
-        status, response_headers, body = bad_request("", {}, "")
-        response = response_builder(status, response_headers ,body)
-        client_connection.sendall(response)
-        client_connection.close()
-        continue
-
-    print("method:", method)
-    print("path:", path)
-    print("version:", version)
-    print("query param:", query_param)
-    print("Headers:", headers)
-    print("Body:", body)
-
-    #route the requests to the appropriate handler
-    try:
-        handler, route = resolve(method, path)
-        if method == "OPTIONS":
-           if route:
-              status = "HTTP/1.1 200 OK"
-              response_headers = {
-                  "Allow": ", ".join(route.keys())
-              }
-              body = b""
-           else:
-               status, response_headers, body = not_found(path, headers, body)
-
-        elif handler:
-            status, response_headers, body = handler(path, headers, body)
-        elif route:
-            allowed_methods = ", ".join(route.keys())
-            status, response_headers, body = method_not_allowed(
-            path,
-            headers,
-            body,
-            allowed_methods
-        )
-        else:
-            status, response_headers, body = not_found(path, headers, body)
-    except Exception as e:
-        print("Internal Server Error:", e)
-        status, response_headers, body = internal_server_error(path, headers, body)
-        response = response_builder(status, response_headers ,body)
-        client_connection.sendall(response)
-        client_connection.close()
-        keep_alive = False
-        continue
-
-    if method == "HEAD":
-        body = b""
-    if method == "OPTIONS":
-        body = b""
-        response_headers = {"Allow": ", ".join(route.keys())}
-    response = response_builder(status, response_headers ,body)
-    client_connection.sendall(response)
-    if headers.get("Connection")=="keep-alive":
-        keep_alive = True
-    else:
-        keep_alive = False
-        client_connection.close()
+    client_connection, client_address = socket.accept()
+    client_connection.settimeout(5.0)
+    handle_client(client_connection)
 
 #close listening socket
 socket.close()
