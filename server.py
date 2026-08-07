@@ -1,4 +1,5 @@
 import socket
+import threading
 from parser import parse_request
 from handlers import not_found, serve_static_file, bad_request, internal_server_error, method_not_allowed
 from response import response_builder
@@ -116,7 +117,10 @@ socket.listen()
 while True:
     client_connection, client_address = socket.accept()
     client_connection.settimeout(5.0)
-    handle_client(client_connection)
+    thread = threading.Thread(
+        target=handle_client, args=(client_connection,)
+    )
+    thread.start()
 
 #close listening socket
 socket.close()
