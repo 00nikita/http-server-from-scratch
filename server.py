@@ -55,7 +55,7 @@ def handle_client(client_connection):
             response = response_builder(status, response_headers ,body)
             client_connection.sendall(response)
             client_ip = client_connection.getpeername()[0]
-            log_error(client_ip, method, path, status, e)
+            log_error(client_ip, "", "", status, str(e))
             client_connection.close()
             return
 
