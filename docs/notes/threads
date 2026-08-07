@@ -1,0 +1,184 @@
+What is a Thread?
+
+A thread is the smallest unit of execution inside a process.
+
+A process can contain one or more threads.
+
+All threads within the same process share:
+
+Global variables.
+Heap memory.
+Open files.
+Socket connections.
+
+Each thread has its own:
+
+Stack.
+Program Counter (instruction pointer).
+CPU registers.
+
+This allows multiple threads to execute different parts of the same program independently.
+
+Why did we need Threads?
+
+Initially, our HTTP server handled one client at a time.
+
+Client A
+
+↓
+
+handle_client()
+
+↓
+
+Client A disconnects
+
+↓
+
+Client B
+
+↓
+
+handle_client()
+
+↓
+
+Client B disconnects
+
+Suppose Client A keeps the connection open using Keep-Alive but does not send another request for 20 seconds.
+
+During those 20 seconds:
+
+The server is still inside handle_client(Client A).
+Client B cannot be accepted or processed.
+Every other client must wait.
+
+Although the CPU may be idle waiting for network data, the server cannot serve other clients because only one thread is executing.
+
+How do Threads solve this?
+
+Instead of handling every client in the main thread, we create a separate thread for each client connection.
+
+Main Thread
+
+↓
+
+accept(Client A)
+
+↓
+
+Thread 1
+
+↓
+
+handle_client(Client A)
+
+Immediately after creating Thread 1, the main thread becomes free again.
+
+Main Thread
+
+↓
+
+accept(Client B)
+
+↓
+
+Thread 2
+
+↓
+
+handle_client(Client B)
+
+Now multiple client connections can be handled simultaneously.
+
+Each thread waits only for its own client.
+
+If Client A is idle, Thread 1 waits for Client A while Thread 2 continues serving Client B.
+
+Concurrency with Threads
+
+Suppose:
+
+1 CPU Core
+3 Threads
+Thread 1 → Client A
+Thread 2 → Client B
+Thread 3 → Client C
+
+The operating system rapidly switches between the threads.
+
+CPU
+
+↓
+
+Thread 1
+
+↓
+
+Thread 2
+
+↓
+
+Thread 3
+
+↓
+
+Thread 1
+
+↓
+
+...
+
+Although only one thread executes at any instant, all clients make progress.
+
+This is concurrency.
+
+Benefits of Threads
+Multiple clients can be served simultaneously.
+One slow or idle client does not block others.
+Better CPU utilization.
+Improved responsiveness.
+Enables concurrent execution within the same process.
+Our HTTP Server
+
+Without threads:
+
+Main Thread
+
+↓
+
+Client A
+
+↓
+
+Client B
+
+↓
+
+Client C
+
+Clients are handled one after another.
+
+With threads:
+
+Main Thread
+
+↓
+
+accept()
+
+↓
+
+Thread 1 → Client A
+
+Thread 2 → Client B
+
+Thread 3 → Client C
+
+The main thread only accepts new connections, while worker threads handle client communication.
+
+Key Takeaway
+
+Threads allow a single process to perform multiple tasks concurrently.
+
+In our HTTP server, threads prevent one client connection from blocking all other clients, allowing the server to continue accepting and serving new connections even when existing clients are idle or waiting to send more requests.

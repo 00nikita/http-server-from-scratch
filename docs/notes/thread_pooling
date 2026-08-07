@@ -1,0 +1,225 @@
+One Thread Per Client
+
+In the thread-per-client model, every new client connection gets its own dedicated thread.
+
+Client A → Thread 1
+Client B → Thread 2
+Client C → Thread 3
+...
+
+Each thread is responsible for handling that client's entire TCP connection, including all requests sent over a Keep-Alive connection.
+
+Why is it simple?
+Each client has its own thread.
+No client blocks another client.
+Easy to understand and implement.
+Every thread maintains its own stack and execution state.
+Why is it inefficient?
+
+Suppose 10,000 clients connect.
+
+10000 Clients
+
+↓
+
+10000 Threads
+
+Each thread requires:
+
+A stack.
+Thread metadata.
+OS scheduling information.
+
+Most clients are not continuously sending requests. They may simply keep the connection open and remain idle.
+
+This means thousands of threads may exist just waiting for network activity.
+
+Context Switching
+
+Suppose the machine has only 8 CPU cores.
+
+Although there are 10,000 threads, only 8 threads can execute simultaneously.
+
+The operating system keeps switching between threads.
+
+Worker 1
+
+↓
+
+Worker 500
+
+↓
+
+Worker 3200
+
+↓
+
+Worker 7
+
+↓
+
+...
+
+The more threads that exist, the more time the CPU spends performing context switches instead of executing useful work.
+
+Memory Usage
+
+Every thread has its own stack.
+
+10000 Threads
+
+↓
+
+10000 Stacks
+
+As the number of connections increases, memory consumption also increases significantly.
+
+Thread Pool
+
+Instead of creating one thread for every client, the server creates a fixed number of worker threads when it starts.
+
+For example,
+
+8 Worker Threads
+
+These workers are reused for every new client connection.
+
+Architecture
+Producer
+
+accept()
+
+↓
+
+Queue
+
+↓
+
+Worker Threads
+
+↓
+
+handle_client()
+
+The producer accepts incoming client connections and places them into a queue.
+
+The worker threads continuously wait for new jobs from the queue.
+
+Why is it better?
+
+Suppose 10,000 clients connect.
+
+Instead of creating:
+
+10000 Threads
+
+the server creates only:
+
+8 Threads
+
+These threads are reused throughout the lifetime of the server.
+
+Memory usage becomes:
+
+8 Threads
+
+↓
+
+8 Stacks
+
+instead of
+
+10000 Threads
+
+↓
+
+10000 Stacks
+Context Switching
+
+Since only a small number of worker threads exist, the operating system only needs to schedule those workers.
+
+This greatly reduces context-switching overhead.
+
+Do jobs still wait?
+
+Yes.
+
+Waiting does not disappear.
+
+The difference is where the waiting happens.
+
+One Thread Per Client
+
+Clients wait inside their own threads.
+
+Client
+
+↓
+
+Thread
+
+↓
+
+Waiting...
+
+Even while waiting, the thread still occupies memory and OS resources.
+
+Thread Pool
+
+Clients wait inside a queue.
+
+Client
+
+↓
+
+Queue
+
+↓
+
+Worker Thread
+
+A queue is much lighter than maintaining thousands of waiting threads.
+
+Comparison
+One Thread Per Client
+10000 Clients
+
+↓
+
+10000 Threads
+
+↓
+
+High Memory Usage
+
+↓
+
+High Context Switching
+
+Jobs wait while occupying expensive thread resources.
+
+Thread Pool
+10000 Clients
+
+↓
+
+Queue
+
+↓
+
+8 Worker Threads
+
+Jobs still wait, but they wait in a lightweight queue instead of occupying thousands of threads.
+
+Key Takeaway
+
+A thread pool does not eliminate waiting.
+
+It simply moves waiting from expensive threads to a lightweight queue, resulting in:
+
+Lower memory usage.
+Fewer context switches.
+Reusable worker threads.
+More predictable resource consumption.
+
+The work still gets done, but the server uses system resources much more efficiently.

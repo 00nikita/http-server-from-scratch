@@ -1,0 +1,85 @@
+Concurrency
+
+Suppose we have:
+
+1 CPU core
+3 worker threads
+3 client connections
+Worker 1 → Client A
+Worker 2 → Client B
+Worker 3 → Client C
+
+Since there is only one CPU core, only one worker thread can execute at any instant.
+
+The OS rapidly switches between them.
+
+CPU Core
+
+↓
+
+Worker 1 (Client A)
+
+↓
+
+Worker 2 (Client B)
+
+↓
+
+Worker 3 (Client C)
+
+↓
+
+Worker 1
+
+↓
+
+Worker 2
+
+↓
+
+Worker 3
+
+...
+
+Although only one thread is running at a time, all three clients make progress.
+
+This is concurrency.
+
+Parallelism
+
+Now suppose we have:
+
+3 CPU cores
+8 worker threads
+8 client connections
+Worker 1 → Client A
+Worker 2 → Client B
+Worker 3 → Client C
+...
+Worker 8 → Client H
+
+The OS schedules the threads across the available CPU cores.
+
+For example:
+
+Core 1              Core 2              Core 3
+
+Worker 1            Worker 2            Worker 3
+
+(Client A)          (Client B)          (Client C)
+
+These three workers are executing at the exact same time.
+
+When one finishes or blocks (e.g., waiting for network data), the OS may schedule another worker:
+
+Core 1              Core 2              Core 3
+
+Worker 4            Worker 2            Worker 5
+
+(Client D)          (Client B)          (Client E)
+
+So even though there are 8 threads, only 3 can execute simultaneously because there are only 3 CPU cores.
+
+The remaining 5 threads are waiting for their turn.
+
+This is parallelism.
