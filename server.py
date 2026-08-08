@@ -56,6 +56,14 @@ def handle_client(client_connection):
         #parse the incoming request
         try:
             method, path, version, query_param, headers, body = parse_request(client_request.decode())
+            if path!="/login" and (not is_authenticated(headers)):
+                status, response_headers, body = unauthorized(path, headers, body)
+                response = response_builder(status, response_headers ,body)
+                client_connection.sendall(response)
+                client_ip = client_connection.getpeername()[0]
+                log_error(client_ip, method, path, status, "Unauthorized access")
+                client_connection.close()
+                return
         except Exception as e:
             status, response_headers, body = bad_request("", {}, "")
             response = response_builder(status, response_headers ,body)

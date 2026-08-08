@@ -82,3 +82,9 @@ def serve_static_file(path, headers, body):
 
     response_headers = response_headers_builder(page, {"Content-Type": content_type})
     return "HTTP/1.1 200 OK", response_headers, page
+
+def unauthorized(path, headers, body):
+    with open("pages/unauthorized.html", "rb") as f:
+        page = f.read()
+    response_headers = response_headers_builder(page, {"Content-Type": "text/html"})
+    return "HTTP/1.1 401 Unauthorized", response_headers, page
